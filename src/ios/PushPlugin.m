@@ -68,7 +68,7 @@
             }
         }
 
-        [self registerWithToken:registrationToken];
+        [self registerWithToken:registrationToken withType:@"FCM"];
     } else {
         NSLog(@"FCM token is null");
     }
@@ -380,9 +380,9 @@
     __weak PushPlugin *weakSelf = self;
     [center getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings * _Nonnull settings) {
 
-        if(![weakSelf usesFCM]) {
-            [weakSelf registerWithToken: token];
-        }
+//        if(![weakSelf usesFCM]) {
+            [weakSelf registerWithToken: token withType:@"APNS"];
+//        }
     }];
 
 
@@ -561,15 +561,12 @@
     }
 }
 
--(void)registerWithToken:(NSString*)token; {
+-(void)registerWithToken:(NSString*)token withType:(NSString *)type {
     // Send result to trigger 'registration' event but keep callback
     NSMutableDictionary* message = [NSMutableDictionary dictionaryWithCapacity:2];
     [message setObject:token forKey:@"registrationId"];
-    if ([self usesFCM]) {
-        [message setObject:@"FCM" forKey:@"registrationType"];
-    } else {
-        [message setObject:@"APNS" forKey:@"registrationType"];
-    }
+    [message setObject:type forKey:@"registrationType"];
+    
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
     [pluginResult setKeepCallbackAsBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
@@ -636,7 +633,7 @@
                         ntohl(tokenBytes[3]), ntohl(tokenBytes[4]), ntohl(tokenBytes[5]),
                         ntohl(tokenBytes[6]), ntohl(tokenBytes[7])];
 
-    [self registerWithToken:sToken];
+    [self registerWithToken:sToken withType:@"APNS"];
 }
 
 - (void)pushRegistry:(PKPushRegistry *)registry didReceiveIncomingPushWithPayload:(PKPushPayload *)payload forType:(NSString *)type
